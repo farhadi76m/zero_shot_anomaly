@@ -32,6 +32,10 @@ def setup_oneformer(dataset, model_path, use_swin):
     
     from demo.defaults import DefaultPredictor
     # import OneFormer Project
+    from detectron2.config import get_cfg
+    from detectron2.projects.deeplab import add_deeplab_config
+    from demo.defaults import DefaultPredictor
+
     from oneformer import (
         add_oneformer_config,
         add_common_config,
