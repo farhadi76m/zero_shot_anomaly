@@ -28,7 +28,7 @@ def setup_sam(sam_checkpoint):
     sam.to("cuda")
     return SamPredictor(sam)
 
-def setup_oneformer(dataset, model_path, use_swin):
+def setup_oneformer( model_path, config):
     
     from demo.defaults import DefaultPredictor
     # import OneFormer Project
@@ -51,9 +51,9 @@ def setup_oneformer(dataset, model_path, use_swin):
     add_dinat_config(cfg)
     add_convnext_config(cfg)
     add_oneformer_config(cfg)
-    cfg.merge_from_file("/content/OneFormer/configs/cityscapes/convnext/oneformer_convnext_xlarge_bs16_90k.yaml")
+    cfg.merge_from_file(config)
     cfg.MODEL.DEVICE = 'cuda'
-    cfg.MODEL.WEIGHTS = "/content/mapillary_pretrain_250_16_convnext_xl_oneformer_cityscapes_90k.pth"
+    cfg.MODEL.WEIGHTS = model_path
     cfg.freeze()
     
    
