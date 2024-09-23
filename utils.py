@@ -1,35 +1,11 @@
 import cv2
 import numpy as np
 from easydict import EasyDict as edict
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2.projects.deeplab import add_deeplab_config
-from mask2former import add_maskformer2_config
-from segment_anything import SamPredictor, sam_model_registry
 
-# Function to set up the Mask2Former model configuration and load the weights
-def setup_mask2former(cfg_path, model_path):
-    """
-    Sets up Mask2Former model configuration.
-    """
-    args = edict({'config_file': cfg_path, 'eval-only': True, 'opts': ["MODEL.WEIGHTS", model_path]})
+import torch
+import torch.nn.functional as F
 
-    cfg = get_cfg()
-    add_deeplab_config(cfg)
-    add_maskformer2_config(cfg)
-    cfg.merge_from_file(args.config_file)
-    cfg.merge_from_list(args.opts)
-    cfg.freeze()
-    return cfg, DefaultPredictor(cfg)
 
-# Function to load SAM model (once)
-def setup_sam(sam_checkpoint):
-    """
-    Sets up the SAM model.
-    """
-    sam = sam_model_registry["vit_l"](checkpoint=sam_checkpoint)
-    sam.to("cuda")
-    return SamPredictor(sam)
 
 # Function to perform inference on an image
 def inference(image, predictor):
@@ -160,7 +136,7 @@ def generate_anomaly_map_with_boxes(image, boxes, sam_predictor, score_map):
         best_mask = masks[scores.argmax()]
 
         # Update the anomaly map with the mask
-        print(best_mask.shape)
+        # print(best_mask.shape)
         anomaly_map = np.maximum(best_mask, anomaly_map)
 
     return anomaly_map
@@ -176,3 +152,34 @@ def heatmap(image, probs):
     heatmap_img = cv2.applyColorMap((probs * 255).astype(np.uint8), cv2.COLORMAP_JET)
     super_imposed_img = cv2.addWeighted(heatmap_img, 0.5, image, 0.5, 0)
     return super_imposed_img
+
+def postprocess_masks(
+        masks: torch.Tensor,
+        input_size, 
+        original_size,
+        img_size
+    ) -> torch.Tensor:
+        """
+        Remove padding and upscale masks to the original image size.
+
+        Arguments:
+          masks (torch.Tensor): Batched masks from the mask_decoder,
+            in BxCxHxW format.
+          input_size (tuple(int, int)): The size of the image input to the
+            model, in (H, W) format. Used to remove padding.
+          original_size (tuple(int, int)): The original size of the image
+            before resizing for input to the model, in (H, W) format.
+
+        Returns:
+          (torch.Tensor): Batched masks in BxCxHxW format, where (H, W)
+            is given by original_size.
+        """
+        masks = F.interpolate(
+            masks,
+            (img_size, img_size),
+            mode="bilinear",
+            align_corners=False,
+        )
+        masks = masks[..., : input_size[0], : input_size[1]]
+        masks = F.interpolate(masks, original_size, mode="bilinear", align_corners=False)
+        return masks

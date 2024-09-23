@@ -67,12 +67,12 @@ def main(args):
 if __name__ == "__main__":
     # Setup argparse to handle command line arguments
     parser = argparse.ArgumentParser(description='Run anomaly detection and generate anomaly maps.')
-    parser.add_argument('config_path', type=str, required=True, help='Path to the config file.')
-    parser.add_argument('model_path', type=str, required=True, help='Path to the model checkpoint file.')
-    parser.add_argument('sam_checkpoint', type=str, required=True, help='Path to the SAM checkpoint file.')
-    parser.add_argument('--image_dir', type=str, required=True, help='Directory containing images.')
+    parser.add_argument('config_path', type=str, help='Path to the config file.')
+    parser.add_argument('model_path', type=str, help='Path to the model checkpoint file.')
+    parser.add_argument('sam_checkpoint', type=str, help='Path to the SAM checkpoint file.')
+    parser.add_argument('--image_dir', type=str, help='Directory containing images.')
     parser.add_argument('--save_dir', type=str,  help='Directory to save results.')
-    parser.add_argument('--dataset', type=str, required=True, help='Choose the dataset you wish to evaluate on.')
+    parser.add_argument('--dataset', type=str,help='Choose the dataset you wish to evaluate on.')
     parser.add_argument('--show', action='store_true', help='Online Visualizing.')
 
     # Parse the arguments
